@@ -78,7 +78,9 @@ export async function POST(request: Request) {
 
           // Send via Resend
           return resend.emails.send({
-            from: `Christian from ${config.companyName} <${config.contactEmail}>`,
+            // Resend requires a verified domain — use their onboarding sender
+            // until a custom domain (e.g. thatteslaguy.com) is set up
+            from: `Christian from ${config.companyName} <onboarding@resend.dev>`,
             to: subscriber.email,
             subject,
             html,

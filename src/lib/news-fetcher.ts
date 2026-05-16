@@ -14,7 +14,7 @@ const TESLA_KEYWORDS = [
   "tesla", "tsla", "model y", "model 3", "model s", "model x",
   "cybertruck", "roadster", "semi", "megapack", "powerwall",
   "supercharger", "autopilot", "fsd", "full self-driving",
-  "gigafactory", "giga", "elon musk", "dojo", "optimus",
+  "gigafactory", "giga", "dojo", "optimus",
   "tesla bot", "tesla energy", "solar roof", "cybercab",
 ];
 

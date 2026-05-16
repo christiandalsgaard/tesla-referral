@@ -2,6 +2,7 @@ import {
   pgTable,
   serial,
   varchar,
+  text,
   timestamp,
   integer,
   jsonb,
@@ -61,5 +62,25 @@ export const emailEvents = pgTable("email_events", {
   resendMessageId: varchar("resend_message_id", { length: 100 }),
   // Any extra payload from the webhook (link URL for clicks, error for bounces, etc.)
   metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ============================================================================
+// x_posts — tracks every tweet posted by the auto-poster cron job.
+// Stores the headline so we never post the same news story twice,
+// plus the tweet ID for reference and the original news source/link.
+// ============================================================================
+export const xPosts = pgTable("x_posts", {
+  id: serial("id").primaryKey(),
+  // The news headline that was posted — used for dedup
+  headline: varchar("headline", { length: 500 }).notNull(),
+  // The full formatted tweet text that was sent to X
+  tweetText: text("tweet_text").notNull(),
+  // X's tweet ID returned after posting
+  tweetId: varchar("tweet_id", { length: 50 }),
+  // Which RSS feed the headline came from
+  source: varchar("source", { length: 200 }),
+  // Link to the original article
+  newsLink: varchar("news_link", { length: 500 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

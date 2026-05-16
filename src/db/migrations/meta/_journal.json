@@ -8,6 +8,13 @@
       "when": 1778912163637,
       "tag": "0000_ambiguous_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778917904846,
+      "tag": "0001_fuzzy_zeigeist",
+      "breakpoints": true
     }
   ]
 }

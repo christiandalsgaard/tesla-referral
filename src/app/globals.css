@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Global theme — dark-first design for the "command center" aesthetic.
+   Landing page uses a gradient dark background; dashboard goes full dark.
+   ============================================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --tesla-red: #cc0000;
+  --tesla-blue: #3b82f6;
+  --accent: #22d3ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-tesla-red: var(--tesla-red);
+  --color-tesla-blue: var(--tesla-blue);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Smooth scrolling for anchor links on the landing page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Subtle glow effect used on metric cards in the dashboard */
+.glow-card {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+.glow-card:hover {
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.25);
 }

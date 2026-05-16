@@ -55,10 +55,13 @@ export async function GET(request: Request) {
         const imgResponse = await fetch(freshNews.imageUrl);
         if (imgResponse.ok) {
           const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
-          // Upload to X via the v1.1 media upload endpoint
-          mediaId = await xClient.v1.uploadMedia(imgBuffer, {
-            mimeType: imgResponse.headers.get("content-type") || "image/jpeg",
-          });
+          // Skip tiny images (icons, emojis, tracking pixels) — must be > 10KB
+          if (imgBuffer.length > 10000) {
+            // Upload to X via the v1.1 media upload endpoint
+            mediaId = await xClient.v1.uploadMedia(imgBuffer, {
+              mimeType: imgResponse.headers.get("content-type") || "image/jpeg",
+            });
+          }
         }
       } catch (imgError) {
         // If image upload fails, just post without it — not a dealbreaker

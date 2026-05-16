@@ -24,7 +24,15 @@
 }
 
 body {
-  background: var(--background);
+  /* Full-page vertical gradient: black → dark red → black */
+  background: linear-gradient(
+    to bottom,
+    #0a0a0a 0%,
+    #1a0000 25%,
+    #2a0000 45%,
+    #1a0000 65%,
+    #0a0a0a 100%
+  );
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

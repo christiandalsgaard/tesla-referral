@@ -1,18 +1,12 @@
 import { config } from "@/lib/config";
 
-// Hero section — the first thing visitors see. Big bold headline, a short
-// personal pitch, and two CTAs: one to the referral link (primary) and one
-// that scrolls down to the email signup form (secondary).
+// Hero section — compact header with headline, pitch, CTAs, and a
+// prominent X follow banner.
 export default function Hero() {
   return (
-    <section className="relative flex flex-col items-center justify-center px-6 pt-24 pb-16 text-center">
-      {/* Gradient background glow behind the headline */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-tesla-red/10 blur-[120px]" />
-      </div>
-
-      {/* Small trust badge above the headline */}
-      <span className="mb-6 inline-block rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-white/70">
+    <section className="relative flex flex-col items-center justify-center px-6 pt-6 pb-4 text-center">
+      {/* Small trust badge */}
+      <span className="mb-4 inline-block rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-white/70">
         Trusted by Tesla owners worldwide
       </span>
 
@@ -23,14 +17,14 @@ export default function Hero() {
         </span>
       </h1>
 
-      <p className="mt-6 max-w-2xl text-lg text-white/60 sm:text-xl">
+      <p className="mt-4 max-w-2xl text-lg text-white/60 sm:text-xl">
         I&apos;ve been driving Tesla for years, and it changed my life. Better for
         your wallet, better for the planet, and the most fun you&apos;ll ever have
         behind the wheel. Use my referral link and we both win.
       </p>
 
       {/* Dual CTA buttons */}
-      <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row">
         <a
           href={config.referralLink}
           target="_blank"
@@ -47,18 +41,20 @@ export default function Hero() {
         </a>
       </div>
 
-      {/* Social proof line */}
-      <p className="mt-8 text-sm text-white/40">
-        Follow my Tesla journey &mdash;{" "}
-        <a
-          href={config.xAccountUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-accent underline underline-offset-2 hover:text-white"
-        >
-          {config.xHandle} on X
-        </a>
-      </p>
+      {/* Big prominent X follow banner */}
+      <a
+        href={config.xAccountUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 flex items-center gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-8 py-5 transition hover:border-accent/40 hover:bg-accent/10"
+      >
+        <span className="text-lg text-white/50">Follow my Tesla journey &mdash;</span>
+        {/* X logo — large and prominent */}
+        <svg viewBox="0 0 24 24" className="h-8 w-8 fill-accent" aria-label="X">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+        <span className="text-2xl font-bold text-accent sm:text-3xl">{config.xHandle}</span>
+      </a>
     </section>
   );
 }

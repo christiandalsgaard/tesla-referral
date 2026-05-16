@@ -12,15 +12,14 @@ const FEEDS = [
 // Templates that turn a headline into a tweet-sized post.
 // {headline} is replaced with the actual news headline.
 // Each template has a different vibe to keep the feed varied.
+// Tweet templates — no emojis, includes {articleLink} for the source article
 const TEMPLATES = [
-  "🚗⚡ {headline}",
-  "📰 {headline}",
-  "⚡ Breaking EV news: {headline}",
-  "🔋 {headline}",
-  "🚀 {headline}",
-  "💡 {headline}",
-  "🌍 {headline}",
-  "⚡ {headline}",
+  "{headline}\n\n{articleLink}",
+  "Breaking: {headline}\n\n{articleLink}",
+  "EV news: {headline}\n\n{articleLink}",
+  "Worth reading: {headline}\n\n{articleLink}",
+  "Interesting: {headline}\n\n{articleLink}",
+  "Big news: {headline}\n\n{articleLink}",
 ];
 
 export interface NewsItem {
@@ -81,11 +80,12 @@ export async function fetchTeslaNews(limit = 20): Promise<NewsItem[]> {
 
 // Pick a random template and fill in the headline + referral link.
 // Truncates the headline if the total tweet would exceed 280 chars.
-export function formatTweet(headline: string): string {
+export function formatTweet(headline: string, articleLink: string): string {
   const template = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
 
   // Calculate max headline length to stay under 280 chars
-  const overhead = template.replace("{headline}", "").length;
+  // X counts every URL as 23 chars (t.co shortener)
+  const overhead = template.replace("{headline}", "").replace("{articleLink}", "").length + 23;
   const maxHeadline = 280 - overhead;
 
   // Truncate headline if needed, adding ellipsis
@@ -94,5 +94,7 @@ export function formatTweet(headline: string): string {
       ? headline.slice(0, maxHeadline - 1) + "…"
       : headline;
 
-  return template.replace("{headline}", trimmedHeadline);
+  return template
+    .replace("{headline}", trimmedHeadline)
+    .replace("{articleLink}", articleLink);
 }

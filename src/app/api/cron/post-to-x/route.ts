@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getXClient } from "@/lib/x-client";
-import { fetchTeslaNews, formatTweet } from "@/lib/news-fetcher";
+import { fetchTeslaNews, formatTweet, fetchOgImage } from "@/lib/news-fetcher";
 import { config } from "@/lib/config";
 import { db } from "@/db";
 import { xPosts } from "@/db/schema";
@@ -49,10 +49,14 @@ export async function GET(request: Request) {
     const xClient = getXClient();
     let mediaId: string | undefined;
 
-    if (freshNews.imageUrl) {
+    // Try RSS image first, fall back to og:image from the article page
+    // (Teslarati doesn't include images in RSS but has og:image on pages)
+    const imageUrl = freshNews.imageUrl || await fetchOgImage(freshNews.link);
+
+    if (imageUrl) {
       try {
         // Download the article's featured image as a buffer
-        const imgResponse = await fetch(freshNews.imageUrl);
+        const imgResponse = await fetch(imageUrl);
         if (imgResponse.ok) {
           const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
           // Skip tiny images (icons, emojis, tracking pixels) — must be > 10KB
@@ -70,14 +74,9 @@ export async function GET(request: Request) {
     }
 
     // 6. Post to X — attach media if we successfully uploaded an image
-    const tweetPayload: { text: string; media?: { media_ids: string[] } } = {
-      text: tweetText,
-    };
-    if (mediaId) {
-      tweetPayload.media = { media_ids: [mediaId] };
-    }
-
-    const tweet = await xClient.v2.tweet(tweetPayload);
+    const tweet = mediaId
+      ? await xClient.v2.tweet({ text: tweetText, media: { media_ids: [mediaId] } })
+      : await xClient.v2.tweet(tweetText);
 
     // 7. Record the post in our database so we don't repeat it
     await db.insert(xPosts).values({

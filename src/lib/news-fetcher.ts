@@ -105,7 +105,15 @@ const COMMENTARY_MAP: { keywords: string[]; lines: string[] }[] = [
     ],
   },
   {
-    keywords: ["optimus", "tesla bot", "robot", "humanoid"],
+    keywords: ["cybercab", "robotaxi", "ride-hail"],
+    lines: [
+      "Robotaxis could generate more revenue than car sales. This is the real endgame.",
+      "A Tesla robotaxi network would be the most profitable transportation business ever built.",
+      "Autonomous ride-hailing is where Tesla's AI investment really pays off.",
+    ],
+  },
+  {
+    keywords: ["optimus", "tesla bot", "humanoid"],
     lines: [
       "Optimus could be bigger than the car business. Tesla is thinking decades ahead.",
       "A humanoid robot that actually works would be the most valuable product ever made.",
@@ -144,14 +152,6 @@ const COMMENTARY_MAP: { keywords: string[]; lines: string[] }[] = [
       "The Semi shows Tesla can dominate commercial vehicles too, not just consumer.",
     ],
   },
-  {
-    keywords: ["cybercab", "robotaxi", "ride-hail"],
-    lines: [
-      "Robotaxis could generate more revenue than car sales. This is the real endgame.",
-      "A Tesla robotaxi network would be the most profitable transportation business ever built.",
-      "Autonomous ride-hailing is where Tesla's AI investment really pays off.",
-    ],
-  },
 ];
 
 // Fallback commentary for headlines that don't match any specific keyword group
@@ -173,9 +173,7 @@ export interface NewsItem {
 // Skips tiny images, emoji/icon URLs, and SVGs to avoid posting
 // garbage thumbnails. Looks for images with width params > 500px
 // or large src URLs typical of featured article photos.
-function extractImageUrl(item: Record<string, unknown>): string | null {
-  const content = (item["content:encoded"] as string) || (item.content as string) || "";
-
+function extractImageFromContent(content: string): string | null {
   // Find all <img src="..."> in the HTML
   const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
   let match;
@@ -207,6 +205,26 @@ function extractImageUrl(item: Record<string, unknown>): string | null {
   }
 
   return null;
+}
+
+// Fetch the og:image meta tag from an article page.
+// This is a fallback for feeds like Teslarati that don't include
+// images in their RSS content but do have og:image on the page.
+export async function fetchOgImage(articleUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(articleUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 TeslaNewsBot" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    // Look for <meta property="og:image" content="...">
+    const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    return ogMatch ? ogMatch[1].replace(/&amp;/g, "&") : null;
+  } catch {
+    return null;
+  }
 }
 
 // Pick a commentary line that actually relates to the headline content.
@@ -241,13 +259,16 @@ export async function fetchTeslaNews(limit = 20): Promise<NewsItem[]> {
       const feed = await parser.parseURL(feedUrl);
       const sourceName = feed.title || feedUrl;
 
-      return (feed.items || []).map((item) => ({
-        title: (item.title || "").trim(),
-        link: item.link || "",
-        source: sourceName,
-        pubDate: item.pubDate || "",
-        imageUrl: extractImageUrl(item as Record<string, unknown>),
-      }));
+      return (feed.items || []).map((item) => {
+        const content = (item["content:encoded"] as string) || (item.content as string) || "";
+        return {
+          title: (item.title || "").trim(),
+          link: item.link || "",
+          source: sourceName,
+          pubDate: item.pubDate || "",
+          imageUrl: extractImageFromContent(content),
+        };
+      });
     })
   );
 

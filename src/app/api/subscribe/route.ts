@@ -64,9 +64,7 @@ export async function POST(request: Request) {
     const confirmUrl = `${config.siteUrl}/confirm?token=${confirmToken}`;
 
     await resend.emails.send({
-      // Resend requires a verified domain — use their onboarding sender
-      // until a custom domain (e.g. thatteslaguy.com) is set up
-      from: `${config.companyName} <onboarding@resend.dev>`,
+      from: `${config.companyName} <${config.contactEmail}>`,
       to: normalizedEmail,
       subject: "Confirm your subscription — That Tesla Guy",
       html: `

@@ -13,14 +13,14 @@ const FEEDS = [
 // {headline} is replaced with the actual news headline.
 // Each template has a different vibe to keep the feed varied.
 const TEMPLATES = [
-  "🚗⚡ {headline}\n\nReady to go electric? Use my referral link 👇\n{referralLink}",
-  "📰 {headline}\n\nThe future is electric. Get yours:\n{referralLink}",
-  "⚡ Breaking EV news: {headline}\n\nOrder a Tesla today 👇\n{referralLink}",
-  "🔋 {headline}\n\nJoin the EV revolution:\n{referralLink}",
-  "🚀 {headline}\n\nThere's never been a better time to go electric:\n{referralLink}",
-  "💡 {headline}\n\nDrive the future. Use my link:\n{referralLink}",
-  "🌍 {headline}\n\nGo green, save money:\n{referralLink}",
-  "⚡ {headline}\n\nWant a Tesla? Start here:\n{referralLink}",
+  "🚗⚡ {headline}",
+  "📰 {headline}",
+  "⚡ Breaking EV news: {headline}",
+  "🔋 {headline}",
+  "🚀 {headline}",
+  "💡 {headline}",
+  "🌍 {headline}",
+  "⚡ {headline}",
 ];
 
 export interface NewsItem {
@@ -81,16 +81,11 @@ export async function fetchTeslaNews(limit = 20): Promise<NewsItem[]> {
 
 // Pick a random template and fill in the headline + referral link.
 // Truncates the headline if the total tweet would exceed 280 chars.
-export function formatTweet(headline: string, referralLink: string): string {
+export function formatTweet(headline: string): string {
   const template = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
 
   // Calculate max headline length to stay under 280 chars
-  // (X counts t.co links as 23 chars each)
-  const templateWithoutPlaceholders = template
-    .replace("{headline}", "")
-    .replace("{referralLink}", "");
-  // Referral link counts as 23 chars (t.co shortener)
-  const overhead = templateWithoutPlaceholders.length + 23;
+  const overhead = template.replace("{headline}", "").length;
   const maxHeadline = 280 - overhead;
 
   // Truncate headline if needed, adding ellipsis
@@ -99,7 +94,5 @@ export function formatTweet(headline: string, referralLink: string): string {
       ? headline.slice(0, maxHeadline - 1) + "…"
       : headline;
 
-  return template
-    .replace("{headline}", trimmedHeadline)
-    .replace("{referralLink}", referralLink);
+  return template.replace("{headline}", trimmedHeadline);
 }

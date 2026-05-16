@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     }
 
     // 4. Format the tweet using a random template
-    const tweetText = formatTweet(freshNews.title, config.referralLink);
+    const tweetText = formatTweet(freshNews.title);
 
     // 5. If the article has a featured image, download it and upload to X as media.
     //    This makes the tweet show a relevant image instead of the referral link card.

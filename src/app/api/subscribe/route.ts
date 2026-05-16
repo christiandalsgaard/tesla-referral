@@ -40,7 +40,32 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Return generic success even if already exists (prevents email enumeration)
+      // If still pending, re-send the confirmation email so they can confirm
+      if (existing[0].status === "pending") {
+        const confirmUrl = `${config.siteUrl}/confirm?token=${existing[0].confirmToken}`;
+        await resend.emails.send({
+          from: `${config.companyName} <${config.contactEmail}>`,
+          to: normalizedEmail,
+          subject: "Confirm your subscription — That Tesla Guy",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #111; color: #eee;">
+              <h2 style="color: #fff;">Almost there! 🎉</h2>
+              <p style="color: #ccc; line-height: 1.6;">
+                Thanks for signing up! Click the button below to confirm your
+                subscription and start getting Tesla tips, deals, and referral bonuses.
+              </p>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${confirmUrl}" style="display: inline-block; padding: 14px 32px; background: #cc0000; color: #fff; text-decoration: none; border-radius: 50px; font-weight: bold;">
+                  Confirm My Subscription
+                </a>
+              </div>
+              <p style="color: #666; font-size: 12px;">
+                If you didn't sign up, you can safely ignore this email.
+              </p>
+            </div>
+          `,
+        });
+      }
       return NextResponse.json({
         message: "Check your inbox to confirm your subscription!",
       });

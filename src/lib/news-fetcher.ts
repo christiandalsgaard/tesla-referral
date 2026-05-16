@@ -28,6 +28,17 @@ export interface NewsItem {
   link: string;
   source: string;
   pubDate: string;
+  imageUrl: string | null;
+}
+
+// Extract the first image URL from RSS item HTML content.
+// Most EV news feeds embed a featured image in <img src="..."> within
+// the content:encoded or content field. Falls back to null if none found.
+function extractImageUrl(item: Record<string, unknown>): string | null {
+  const content = (item["content:encoded"] as string) || (item.content as string) || "";
+  // Match the first <img src="..."> in the HTML
+  const match = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1].replace(/&amp;/g, "&") : null;
 }
 
 // Fetch recent headlines from all RSS feeds, sorted newest first.
@@ -49,6 +60,7 @@ export async function fetchTeslaNews(limit = 20): Promise<NewsItem[]> {
         link: item.link || "",
         source: sourceName,
         pubDate: item.pubDate || "",
+        imageUrl: extractImageUrl(item as Record<string, unknown>),
       }));
     })
   );

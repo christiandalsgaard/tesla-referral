@@ -6,6 +6,7 @@ import { subscribers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { resend } from "@/lib/resend";
 import { config } from "@/lib/config";
+import { buildWelcomeEmail } from "@/lib/welcome-email";
 
 // Validate email format with zod — rejects obvious garbage
 const subscribeSchema = z.object({
@@ -14,9 +15,9 @@ const subscribeSchema = z.object({
 
 // POST /api/subscribe
 // Handles new email signups from the landing page form.
-// Implements double opt-in: inserts as 'pending', sends a confirmation email.
-// If the email already exists, returns a friendly message without leaking
-// whether the email is in the system (privacy best practice).
+// No double opt-in — subscribers are confirmed immediately and receive
+// a warm welcome email. If the email already exists, returns a generic
+// success message without leaking status (privacy best practice).
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -40,79 +41,37 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (existing.length > 0) {
-      // If still pending, re-send the confirmation email so they can confirm
-      if (existing[0].status === "pending") {
-        const confirmUrl = `${config.siteUrl}/confirm?token=${existing[0].confirmToken}`;
-        await resend.emails.send({
-          from: `${config.companyName} <${config.contactEmail}>`,
-          to: normalizedEmail,
-          subject: "Confirm your subscription — That Tesla Guy",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #111; color: #eee;">
-              <h2 style="color: #fff;">Almost there! 🎉</h2>
-              <p style="color: #ccc; line-height: 1.6;">
-                Thanks for signing up! Click the button below to confirm your
-                subscription and start getting Tesla tips, deals, and referral bonuses.
-              </p>
-              <div style="text-align: center; margin: 24px 0;">
-                <a href="${confirmUrl}" style="display: inline-block; padding: 14px 32px; background: #cc0000; color: #fff; text-decoration: none; border-radius: 50px; font-weight: bold;">
-                  Confirm My Subscription
-                </a>
-              </div>
-              <p style="color: #666; font-size: 12px;">
-                If you didn't sign up, you can safely ignore this email.
-              </p>
-            </div>
-          `,
-        });
-      }
+      // Already in the system — return generic success without re-sending
       return NextResponse.json({
-        message: "Check your inbox to confirm your subscription!",
+        message: "Welcome to the community! Check your inbox.",
       });
     }
 
-    // Generate unique tokens for confirmation and unsubscribe links
+    // Generate a unique unsubscribe token (CAN-SPAM requirement)
     const confirmToken = nanoid(32);
     const unsubscribeToken = nanoid(32);
 
-    // Insert the new subscriber as 'pending' — they must click the confirm link
+    // Insert as 'confirmed' immediately — no double opt-in needed
     await db.insert(subscribers).values({
       email: normalizedEmail,
-      status: "pending",
+      status: "confirmed",
       confirmToken,
       unsubscribeToken,
+      confirmedAt: new Date(),
       source: "landing_page",
     });
 
-    // Send the confirmation email via Resend.
-    // The confirm link includes the token so we can verify ownership.
-    const confirmUrl = `${config.siteUrl}/confirm?token=${confirmToken}`;
-
+    // Send the welcome email — makes new subscribers feel like they
+    // just joined something special
     await resend.emails.send({
-      from: `${config.companyName} <${config.contactEmail}>`,
+      from: `Christian from ${config.companyName} <${config.contactEmail}>`,
       to: normalizedEmail,
-      subject: "Confirm your subscription — That Tesla Guy",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #111; color: #eee;">
-          <h2 style="color: #fff;">Almost there! 🎉</h2>
-          <p style="color: #ccc; line-height: 1.6;">
-            Thanks for signing up! Click the button below to confirm your
-            subscription and start getting Tesla tips, deals, and referral bonuses.
-          </p>
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${confirmUrl}" style="display: inline-block; padding: 14px 32px; background: #cc0000; color: #fff; text-decoration: none; border-radius: 50px; font-weight: bold;">
-              Confirm My Subscription
-            </a>
-          </div>
-          <p style="color: #666; font-size: 12px;">
-            If you didn't sign up, you can safely ignore this email.
-          </p>
-        </div>
-      `,
+      subject: "Welcome to the Tesla community — you're in!",
+      html: buildWelcomeEmail(unsubscribeToken),
     });
 
     return NextResponse.json({
-      message: "Check your inbox to confirm your subscription!",
+      message: "Welcome to the community! Check your inbox.",
     });
   } catch (error) {
     console.error("Subscribe error:", error);
